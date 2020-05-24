@@ -1,5 +1,4 @@
 # Slabber
-<<<<<<< HEAD
 Homemade chat app made with MERN stack.
 
 ## Description
@@ -17,6 +16,3 @@ Being created for a college project and to learn about the tech stack.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
-=======
-Chat application with Chatrooms and private conversations
->>>>>>> 1b1dba913fb673355aacff3e3b46055801bd59ef
