@@ -10,7 +10,7 @@
         </style>
     </head>
     <body>
-        <center><h1><%=roomname%></h1></center>
+        <center><h1><%= roomName %></h1></center>
         <div id="chat-messages">
 
         </div>
@@ -22,7 +22,7 @@
         </div>
         <script src="../socket.io/socket.io.js"></script>
         <script>
-            var roomid = 'chatroom/'+"<%=room%>";
+            var roomid = 'chatroom/'+"<%= room %>";
             const socket = io();
             var msg = '';
 

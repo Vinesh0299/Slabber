@@ -5,7 +5,7 @@ app.set('view engine', 'ejs');
 
 app.get('/chatroom/:roomid', (req, res, next) => {
     var roomid = req.params.roomid;
-    res.render('../views/chatroom.ejs', {room: roomid, roomname: 'Chat Room '+roomid});
+    res.render('../views/chatroom.ejs', {room: roomid, roomName: 'Chat Room '+roomid});
 });
 
 app.get('/chat/:chatid', (req, res, next) => {

@@ -1,7 +1,6 @@
 module.exports = function(io) {
 
     io.on('connection', (socket) => {
-        console.log('fuck yeah');
 
         socket.on('join', (data) => {
             socket.join(data.room);
@@ -14,5 +13,6 @@ module.exports = function(io) {
                 room: message.room,
             });
         });
+        
     });
 }
