@@ -10,7 +10,7 @@
         </style>
     </head>
     <body>
-        <center><h1><%=roomname%></h1></center>
+        <center><h1><%=friendName%></h1></center>
         <div id="chat-messages">
 
         </div>
@@ -22,18 +22,19 @@
         </div>
         <script src="../socket.io/socket.io.js"></script>
         <script>
-            var roomid = JSON.parse("<%=room%>");
-            const socket = io('/chatroom/'+roomid);
+            var chatid = "<%=chat%>";
+            const socket = io();
             var msg = '';
 
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
-                socket.emit('msg', {msg: msg, id: roomid});
+                socket.emit('msg', {msg: msg, id: chatid});
             }
             socket.on('msg', (data) => {
-                var node = document.createElement('div');
-                var msgdata = document.createTextNode(data);
-                document.getElementById("chat-messages").appendChild(node.appendChild(msgdata));
+                var div = document.createElement('div');
+                div.id = 'msg';
+                div.innerHTML = data;
+                document.getElementById("chat-messages").appendChild(div);
             });
         </script>
     </body>

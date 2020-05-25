@@ -3,14 +3,16 @@ const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-const chatroom = require('./routes/chatroom.js');
+
+const chatroutes = require('./routes/chats.js');
+
+require('./socket/groupchat.js')(io);
 
 const PORT = 3000 || process.env.PORT;
 
 app.use(express.static(path.join(__dirname, 'template')));
-app.use('/', chatroom.app);
+app.use('/', chatroutes);
 
-chatroom.socket(io);
 /*io.of('/admin').on('connection', (socket) => {
     console.log('fuck! admin is here');
 });*/
