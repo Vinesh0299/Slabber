@@ -4,32 +4,29 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-var getDbIns = require('./models/dbconnection.js');
+// Importing database connection instance
+const getDbIns = require('./models/dbconnection.js');
 
 getDbIns.then((db) => {
-    db.collection("inventory").find({}).toArray((err, items) => {
-        console.log(items);
+    const inventory = db.collection("inventory");
+    inventory.insertOne({name: "Madara Uchiha", age: 180})
+    .then((result) => {
+        inventory.find({}).toArray((err, items) => {
+            console.log(items);
+        });
     });
 });
 
-/*const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
-client.connect(err => {
-    client.create
-    const db = client.db("test");
-    const collection = db.collection("inventory");
-    collection.find({}).toArray((err, items) => {
-        console.log(items);
-    });
-});
-client.close();*/
-
+// Importing created routes
 const chatRoutes = require('./routes/chats.js');
 const userRoutes = require('./routes/user.js');
 
+// Importing created socket events
 require('./socket/groupchat.js')(io);
 
 const PORT = 3000 || process.env.PORT;
 
+// Mounting routes on the app
 app.use('/', chatRoutes);
 app.use('/', userRoutes);
 
