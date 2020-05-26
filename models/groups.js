@@ -7,6 +7,9 @@ var groupSchema = mongoose.Schema({
     memberList: [{
         memberId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
         memberName: {type: String, default: ''}
+    }],
+    messages: [{
+        message: {type: mongoose.Schema.Types.ObjectId, ref: 'Message'}
     }]
 });
 
