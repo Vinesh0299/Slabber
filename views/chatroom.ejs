@@ -30,6 +30,7 @@
 
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
+                document.getElementById('write-message').value = '';
                 socket.emit('createMessage', {text: msg, room: roomid});
             }
             socket.on('newMessage', (data) => {

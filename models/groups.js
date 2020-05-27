@@ -13,4 +13,4 @@ var groupSchema = mongoose.Schema({
     }]
 });
 
-module.exports = mongoose.Schema('Chatroom', groupSchema);
+module.exports = mongoose.model('Chatroom', groupSchema);
