@@ -11,7 +11,6 @@ const chatRoutes = require('./routes/chats.js');
 const userRoutes = require('./routes/user.js');
 
 const dbIns = require('./models/dbconnection.js');
-const user = require('./models/user.js');
 
 dbIns.then((db) => {
     console.log('Database connected');
