@@ -9,7 +9,12 @@ const userSchema = mongoose.Schema({
     gender: {type: String, default: ''},
     country: {type: String, default: ''},
     sentRequest: [{
-        username: {type: String, default: ''}
+        username: {type: String, default: ''},
+        sentAt: {type: Date, default: Date.now}
+    }],
+    receivedRequest: [{
+        username: {type: String, default: ''},
+        receivedAt: {type: Date, default: Date.now}
     }],
     friendsList: [{
         friendId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
