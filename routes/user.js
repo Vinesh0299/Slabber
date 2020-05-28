@@ -54,10 +54,12 @@ app.post('/sendrequest', (req, res, next) => {
     });
 });
 
+// Endpoing to accept friend request
 app.post('/acceptrequest', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
+        // Checking if user exists
         Users.find({username: data.requestUsername}).toArray((err, items) => {
             if(items.length === 0) res.send({"error": 1, "message": "User does not exists"});
             else {
@@ -66,7 +68,9 @@ app.post('/acceptrequest', (req, res, next) => {
                 var alreadyFriend = false;
                 Users.find({username: data.username}).toArray()
                 .then((items) => {
+                    console.log(err);
                     const userId = items[0]._id;
+                    // Checking if uers are already friends and if not then adding them as friends
                     friendsList.forEach((friend) => {
                         if(JSON.stringify(friend.oid) === JSON.stringify(userId)) alreadyFriend = true;
                     });
@@ -90,11 +94,13 @@ app.post('/acceptrequest', (req, res, next) => {
                     }
                 })
                 .then((items) => {
+                    // Removing requests from both users after successfully adding them as friends
                     Users.updateOne({username: data.username}, { $pull: { receivedRequest: data.requestUsername } })
                     .then((items) => {
                         Users.updateOne({username: data.requestUsername}, { $pull: { sentRequest: data.username } })
                     });
                 }).then((items) => {
+                    // Sending response to the user
                     if(alreadyFriend) res.send({"error": 0, "message": "Friend Request already Accepted"});
                     else res.send({"error": 0, "message": "Friend Request already Accepted"});
                 });
