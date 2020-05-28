@@ -25,6 +25,7 @@ app.post('/createroom', (req, res, next) => {
     dbIns.then((db) => {
         const Chatrooms = db.collection('Chatrooms');
         const Users = db.collection('Users');
+        // Check if username actually exists
         Users.find({username: data.username}).toArray((err, items) => {
             const chatroom = new groups({
                 name: data.name,
@@ -34,11 +35,13 @@ app.post('/createroom', (req, res, next) => {
                     "$db": 'test'
                 }
             });
+            // Insert the created chatroom on to the database
             Chatrooms.insertOne(chatroom)
             .then((items) => {
                 data.members.map((member) => {
                     Users.find({username: member}).toArray((err, items) => {
                         if(items.length > 0) {
+                            // Update the memberList array for the chatroom
                             Chatrooms.updateOne({_id: chatroom._id}, { $push: { memberList: {
                                 memberId: {
                                     "$ref": 'User',
@@ -47,6 +50,7 @@ app.post('/createroom', (req, res, next) => {
                                 },
                                 memberName: items[0].fullname
                             } } });
+                            // Add this chatroom to each member's chatroom list
                             Users.updateOne({username: items[0].username}, { $push: { chatRoomList: {
                                 roomId: {
                                     "$ref": 'Chatroom',
