@@ -67,4 +67,7 @@ app.post('/createroom', (req, res, next) => {
     });
 });
 
+// Create a new private chat
+//app.post()
+
 module.exports = app;

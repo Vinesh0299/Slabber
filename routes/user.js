@@ -37,10 +37,12 @@ app.post('/signup', (req, res, next) => {
     });
 });
 
+// Send friend request
 app.post('/sendrequest', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
+        // Checking if user exists
         Users.find({username: data.findFriend}).toArray((err, items) => {
             if(items.length === 0) res.send({"error": 1, "message": "Your requested user does not exists, please try again"});
             else {
@@ -92,8 +94,7 @@ app.post('/acceptrequest', (req, res, next) => {
                             "$db": "test"
                         } } });
                     }
-                })
-                .then((items) => {
+                }).then((items) => {
                     // Removing requests from both users after successfully adding them as friends
                     Users.updateOne({username: data.username}, { $pull: { receivedRequest: data.requestUsername } })
                     .then((items) => {
