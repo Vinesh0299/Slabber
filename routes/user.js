@@ -3,6 +3,8 @@ const app = express();
 const dbIns = require('../models/dbconnection.js');
 const user = require('../models/user.js');
 const jwt = require('jsonwebtoken');
+const mailer = require('../helpers/mailer.js');
+const token = require('../models/tokens.js');
 const ObjectId = require('mongodb').ObjectId;
 
 const privatekey = process.env.KEY || "thisisasecret";
@@ -72,10 +74,18 @@ app.post('/signup', (req, res, next) => {
                         // Hashing the user password
                         newUser.password = newUser.encryptPassword(data.password);
                         Users.insertOne(newUser, (err, result) => {
-                            res.send({"error": 0, "message": "User added successfully to the database", "token": jwt.sign({
+                            const jwtToken = jwt.sign({
                                 email: data.email,
                                 username: data.username
-                            }, privatekey)});
+                            }, privatekey);
+                            const newToken = new token({
+                                username: data.username,
+                                email: data.email,
+                                token: jwtToken
+                            });
+                            const info = await mailer.sendMail(newToken).then((items) => {
+                                res.send({"error": 0, "message": "User added successfully to the database", "token": jwtToken});
+                            });
                         });
                     }
                 });
@@ -120,7 +130,8 @@ app.get('/confirmation', (req,res,next)=>{
 
 // Route to resend confirmation mail
 app.post('/resend', (req, res, next)=>{
-    const email = req.body.email;
+    const data = req.body;
+
     /*
     Look in token collection for given email.
     if found call this function 
