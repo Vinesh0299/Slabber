@@ -83,7 +83,7 @@ app.post('/signup', (req, res, next) => {
                                 email: data.email,
                                 token: jwtToken
                             });
-                            const info = await mailer.sendMail(newToken).then((items) => {
+                            const info = mailer.sendMail(newToken).then((items) => {
                                 res.send({"error": 0, "message": "User added successfully to the database", "token": jwtToken});
                             });
                         });
@@ -132,31 +132,27 @@ app.get('/confirmation', (req,res,next)=>{
 app.post('/resend', (req, res, next)=>{
     const data = req.body;
 
-    /*
-    Look in token collection for given email.
-    if found call this function 
-        var info = mailer.sendMail(the_Token);
-    if not found make token as described below, save it. now call the function with newToken.
-        
-        
-        Sample Code for reference.
-        Token.findOne({email : user_email}, (err,tok)=>{
-            if(err){
-                // token epired.
-                var newToken = new Token({
-                    username: req.body.username,
-                    email: req.body.email,
-                    token: crypto.randomBytes(16).toString('hex')
-                }); 
-                token.save((err)=>{
-                    var info = mailer.sendMail(req.body.email,newToken);
-                    console.log(info);
-                });
-            } else {
-                var info = mailer.sendMail(tok.email,tok.token);
-            }
-        })    
-    */ 
+    try {
+        const decoded = jwt.verify(data.token, privatekey);
+        dbIns.then((db) => {
+            const Users = db.collection('Users');
+            Users.find({username: decoded.username}).toArray((err, items) => {
+                if(items.length === 0) res.send({"error": 1, "message": "User not found in database"});
+                else {
+                    const newToken = new token({
+                        username: decoded.username,
+                        email: decoded.email,
+                        token: data.token
+                    });
+                    const info = mailer.sendMail(newToken).then((items) => {
+                        res.send({"error": 0, "message": "Verification email sent"});
+                    });
+                }
+            });
+        });
+    } catch(err) {
+        res.send({"error": 2, "message": "Token is invalid"});
+    }
         
 });
 
