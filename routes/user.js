@@ -23,16 +23,18 @@ app.post('/login', (req, res, next) => {
         const Users = db.collection('Users');
         // Login Verification, if token exists then authentication is done instantaneously
         if(!data.token) {
-            Users.findOne({email: data.email}).toArray((err, item) => {
+            Users.find({email: data.email}).toArray((err, item) => {
                 if(item.length === 0){
                     res.send({"error": 3, "message":"User Email Not found"});
                 } else {
                     const newUser = new user(item[0]);
-                    newUser.isVerified = true;
                     if(!newUser.validUserPassword(data.password)){
                         res.send({"error": 4, "message": "Incorrect Password"});
                     } else if(!newUser.isVerified){
-                        res.send({"error": 5, "message": "Email not verified"});
+                        res.send({"error": 5, "message": "Email not verified", "token": jwt.sign({
+                            email: data.email,
+                            username: item[0].username
+                        }, privatekey)});
                     } else {
                         res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
                             email: data.email,
@@ -83,7 +85,7 @@ app.post('/signup', (req, res, next) => {
                                 email: data.email,
                                 token: jwtToken
                             });
-                            const info = mailer.sendMail(newToken).then((items) => {
+                            mailer.sendMail(newToken).then((items) => {
                                 res.send({"error": 0, "message": "User added successfully to the database", "token": jwtToken});
                             });
                         });
@@ -144,7 +146,7 @@ app.post('/resend', (req, res, next)=>{
                         email: decoded.email,
                         token: data.token
                     });
-                    const info = mailer.sendMail(newToken).then((items) => {
+                    mailer.sendMail(newToken).then((items) => {
                         res.send({"error": 0, "message": "Verification email sent"});
                     });
                 }
