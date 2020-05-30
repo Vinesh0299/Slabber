@@ -2,7 +2,11 @@ const express = require('express');
 const app = express();
 const dbIns = require('../models/dbconnection.js');
 const user = require('../models/user.js');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectId;
+
+const privatekey = process.env.KEY || "thisisasecret";
 
 // These 2 (lines 8-9) are required to parse url parameters
 const urls = require('url');
@@ -16,20 +20,33 @@ app.post('/login', (req, res, next) => {
     
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        // Login Verification.
-        Users.find({email: data.email}).toArray((err, item) => {
-            if(item.length === 0){
-                res.send({"error": 3, "message":"User Email Not found"});
-            } else {
-                if(!item.validUserPassword(data.password)){
-                    res.send({"error": 4, "message":"Incorrect Password"});
-                };
-                if(!item.isVerified){
-                    res.send({"error": 5, "message": "Email not verified"});
+        // Login Verification, if token exists then authentication is done instantaneously
+        if(!data.token) {
+            Users.find({email: data.email}).toArray((err, item) => {
+                if(item.length === 0){
+                    res.send({"error": 3, "message":"User Email Not found"});
+                } else {
+                    const newUser = new user(item[0]);
+                    newUser.isVerified = true;
+                    if(!newUser.validUserPassword(data.password)){
+                        res.send({"error": 4, "message": "Incorrect Password"});
+                    } else if(!newUser.isVerified){
+                        res.send({"error": 5, "message": "Email not verified"});
+                    } else {
+                        res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
+                            email: data.email
+                        }, privatekey)});
+                    }
                 }
-                res.send(item);
+            });
+        } else {
+            try {
+                const decoded = jwt.verify(data.token, privatekey);
+                res.send({"error": 0, "message": "User authenticated"});
+            } catch(err) {
+                res.send({"error": 1, "message": "Token is invalid"});
             }
-        });
+        }
     });
 });
 
