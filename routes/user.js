@@ -3,7 +3,6 @@ const app = express();
 const dbIns = require('../models/dbconnection.js');
 const user = require('../models/user.js');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const ObjectId = require('mongodb').ObjectId;
 
 const privatekey = process.env.KEY || "thisisasecret";
@@ -81,47 +80,41 @@ app.post('/signup', (req, res, next) => {
     });
 });
 
-// Url for confirming Email
+// Route for confirming Email
 app.get('/confirmation', (req,res,next)=>{
-    let parsedUrl = urls.parse(req.url);
-    let parsedQs = querystring.parse(parsedUrl.query);
-    let user_email = parsedQs.email;
-    let tok = parsedQs.tok;
-    /*
-        U have email(String), tok(string).
-        Search the token collection for the given email
-        if tok matches then search for the user in User collection.
-        then update the isVerified property of the user to true.
+    const parsedUrl = urls.parse(req.url);
+    const parsedQs = querystring.parse(parsedUrl.query);
+    const user_email = parsedQs.email;
+    const token = parsedQs.token;
 
-        reference: code to be deleted.
-        if(!user_email || !tok){
-                req.flash('error', "Missing Auth String Credentials");
-                res.redirect('/');
-            }
-            Token.findOne({email:user_email}, async (err,stored_token)=>{
-                if(err){
-                    req.flash('error', "Token Expired or unavailable");
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                }
-                console.log(stored_token);
-                console.log(tok);
-                if(stored_token.token === tok){
-                    
-                    const result = await User.updateOne({email:user_email}, {isVerified: true});
-                    req.flash('error', "Email Verified Successfully");
-                    const errors = req.flash('errors');
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                } else {
-                    req.flash('error', "Parameters Do not Match");
-                    const errors = req.flash('error');
-                    return res.render('index', {title: 'Slabber | Login', messages: errors, hasErrors: errors.length > 0});
-                }
-            })
-    */
-    
+    if(!token || !user_email) {
+        res.send({"error": 1, "message": "User email or token not present"});
+    } else {
+        // Checking if token is valid
+        try {
+            const decoded = jwt.verify(token, privatekey);
+            if(decoded.email !== user_email) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
+            dbIns.then((db) => {
+                const Users = db.collection('Users');
+                Users.find({email: user_email}).toArray((err, items) => {
+                    if(items.length === 0) res.send({"error": 4, "message": "No such user exists in database"});
+                    else {
+                        if(decoded.username !== items[0].username) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
+                        else {
+                            Users.updateOne({username: decoded.username}, { $set: { isVerified: true } }).then((items) => {
+                                res.send({"error": 0, "message": "User was successfully Verified"});
+                            });
+                        }
+                    }
+                });
+            });
+        } catch(err) {
+            res.send({"error": 2, "message": "Token is invalid"});
+        }
+    }
 });
 
-// route to resend confirmation mail
+// Route to resend confirmation mail
 app.post('/resend', (req, res, next)=>{
     const email = req.body.email;
     /*
