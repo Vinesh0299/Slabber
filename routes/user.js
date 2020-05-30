@@ -21,7 +21,7 @@ app.post('/login', (req, res, next) => {
         const Users = db.collection('Users');
         // Login Verification, if token exists then authentication is done instantaneously
         if(!data.token) {
-            Users.find({email: data.email}).toArray((err, item) => {
+            Users.findOne({email: data.email}).toArray((err, item) => {
                 if(item.length === 0){
                     res.send({"error": 3, "message":"User Email Not found"});
                 } else {
@@ -33,7 +33,8 @@ app.post('/login', (req, res, next) => {
                         res.send({"error": 5, "message": "Email not verified"});
                     } else {
                         res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
-                            email: data.email
+                            email: data.email,
+                            username: item[0].username
                         }, privatekey)});
                     }
                 }
@@ -71,7 +72,10 @@ app.post('/signup', (req, res, next) => {
                         // Hashing the user password
                         newUser.password = newUser.encryptPassword(data.password);
                         Users.insertOne(newUser, (err, result) => {
-                            res.send({"error": 0, "message": "User added successfully to the database"});
+                            res.send({"error": 0, "message": "User added successfully to the database", "token": jwt.sign({
+                                email: data.email,
+                                username: data.username
+                            }, privatekey)});
                         });
                     }
                 });
