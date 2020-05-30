@@ -8,6 +8,10 @@ const ObjectId = require('mongodb').ObjectId;
 app.set('view engine', 'ejs');
 app.use(express.json());
 
+app.get('/', (req, res, next) => {
+    res.send('FUCK YOU');
+});
+
 // Route to handle chatrooms
 app.get('/chatroom/:roomid', (req, res, next) => {
     var roomid = req.params.roomid;
