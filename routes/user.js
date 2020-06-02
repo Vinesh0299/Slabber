@@ -39,7 +39,7 @@ app.post('/login', (req, res, next) => {
                         res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
                             email: data.email,
                             username: item[0].username
-                        }, privatekey)});
+                        }, privatekey), "username": item[0].username});
                     }
                 }
             });
@@ -86,7 +86,7 @@ app.post('/signup', (req, res, next) => {
                                 token: jwtToken
                             });
                             mailer.sendMail(newToken).then((items) => {
-                                res.send({"error": 0, "message": "User added successfully to the database", "token": jwtToken});
+                                res.send({"error": 0, "message": "User added successfully to the database"});
                             });
                         });
                     }
@@ -228,6 +228,51 @@ app.post('/acceptrequest', (req, res, next) => {
                 });
             }
         });
+    });
+});
+
+app.get('/getfriendlist', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        Users.find({username: data.username}).toArray().then((items) => {
+            if(items.length === 0) res.send({"error": 0, "message": "You don't have any friends"});
+            else {
+                var friends = [];
+                var i = 0;
+                items[0].friendsList.forEach((friend) => {
+                    Users.find({_id: friend.oid}).toArray().then((friend) => {
+                        friends[i] = {};
+                        friends[i].username = friend[0].username;
+                        friends[i].fullname = friend[0].fullname;
+                        i++;
+                    });
+                });
+                res.send({"error": 0, "message": "Here is a list of your friends", "friends": friends});
+            }
+        });
+    });
+});
+
+// This api will send info of all the requests sent by the user that are not yet accepted
+app.get('/getsentrequests', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        return Users.find({username: data.username}).toArray()
+    }).then((item) => {
+        res.send({"error": 0, "message": "Here are your sent requests", "sentRequests": item[0].sentRequest});
+    });
+});
+
+// This api endpoint will send all the received requests not yet accepted by the user
+app.get('/getreceivedrequests', (req, res, next) => {
+    const data = req.body;
+    dbIns.then((db) => {
+        const Users = db.collection('Users');
+        return Users.find({username: data.username}).toArray()
+    }).then((item) => {
+        res.send({"error": 0, "message": "These are friend requests sent to you", "receivedRequests": item[0].receivedRequest});
     });
 });
 

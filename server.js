@@ -35,6 +35,6 @@ require('./socket/groupchat.js')(io);
 app.use('/', chatRoutes);
 app.use('/', userRoutes);
 
-const PORT = process.env.PORT;
+const PORT = 3000 || process.env.PORT;
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
