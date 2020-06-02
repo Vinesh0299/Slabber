@@ -235,19 +235,16 @@ app.get('/getfriendlist', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        Users.find({username: data.username}).toArray().then((items) => {
-            if(items.length === 0) res.send({"error": 0, "message": "You don't have any friends"});
+        Users.find({username: data.username}).toArray().then(async (items) => {
+            if(items[0].friendsList.length === 0) res.send({"error": 0, "message": "You don't have any friends"});
             else {
                 var friends = [];
-                var i = 0;
-                items[0].friendsList.forEach((friend) => {
-                    Users.find({_id: friend.oid}).toArray().then((friend) => {
-                        friends[i] = {};
-                        friends[i].username = friend[0].username;
-                        friends[i].fullname = friend[0].fullname;
-                        i++;
-                    });
-                });
+                for(var i = 0; i < items[0].friendsList.length; i++) {
+                    const friend = await Users.find({_id: items[0].friendsList[i].oid}).toArray();
+                    friends[i] = {};
+                    friends[i].username = friend[0].username;
+                    friends[i].fullname = friend[0].fullname;
+                }
                 res.send({"error": 0, "message": "Here is a list of your friends", "friends": friends});
             }
         });
