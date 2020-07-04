@@ -201,7 +201,7 @@ app.post('/acceptrequest', (req, res, next) => {
                         Users.updateOne({username: data.requestUsername}, { $push: { friendsList: {
                             "$ref": 'User',
                             "$id": new ObjectId(userId),
-                            "$db": "test"
+                            "$db": "Slabber"
                         } } });
                     }
                     alreadyFriend = false;
@@ -212,7 +212,7 @@ app.post('/acceptrequest', (req, res, next) => {
                         Users.updateOne({username: data.username}, { $push: { friendsList: {
                             "$ref": 'User',
                             "$id": new ObjectId(reqUserId),
-                            "$db": "test"
+                            "$db": "Slabber"
                         } } });
                     }
                 }).then((items) => {
