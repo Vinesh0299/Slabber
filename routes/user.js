@@ -231,6 +231,7 @@ app.post('/acceptrequest', (req, res, next) => {
     });
 });
 
+// Api will send the username and fullname of all the friends of the user
 app.get('/getfriendlist', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {

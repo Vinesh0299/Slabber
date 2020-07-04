@@ -7,10 +7,10 @@ module.exports = function(io) {
         });
 
         socket.on('createMessage', (message) => {
-            socket.join(message.room);
             io.to(message.room).emit('newMessage', {
-                text: message.text,
+                message: message.content,
                 room: message.room,
+                socket: socket.id
             });
         });
     });
