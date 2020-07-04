@@ -31,11 +31,11 @@
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
                 document.getElementById('write-message').value = '';
-                socket.emit('createMessage', {text: msg, room: roomid});
+                socket.emit('createMessage', {content: msg, room: roomid});
             }
             socket.on('newMessage', (data) => {
                 var node = document.createElement('div');
-                node.innerText = data.text;
+                node.innerText = data.message;
                 document.getElementById("chat-messages").appendChild(node);
             });
         </script>
