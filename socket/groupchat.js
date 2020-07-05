@@ -6,8 +6,8 @@ module.exports = function(io) {
         console.log(sockets);
 
         socket.on('join', (data) => {
-            sockets[socket.id] = 1;
             if(!sockets[socket.id]) socket.join(data.room);
+            sockets[socket.id] = 1;
         });
 
         socket.on('createMessage', (message) => {
