@@ -3,11 +3,12 @@ var sockets = {};
 module.exports = function(io) {
 
     io.on('connection', (socket) => {
-        console.log(sockets);
 
         socket.on('join', (data) => {
-            if(!sockets[socket.id]) socket.join(data.room);
-            sockets[socket.id] = 1;
+            if(sockets[socket.id].indexOf(data.room) === -1) {
+                socket.join(data.room);
+                sockets[socket.id] = [...sockets[socket.id], data.room];
+            }
         });
 
         socket.on('createMessage', (message) => {
@@ -19,7 +20,8 @@ module.exports = function(io) {
         });
 
         socket.on('disconnect', () => {
-            sockets[socket.id] = 0;
+            delete sockets[socket.id];
+            console.log(sockets);
         });
     });
 }
