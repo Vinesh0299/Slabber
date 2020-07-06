@@ -5,7 +5,10 @@ module.exports = function(io) {
     io.on('connection', (socket) => {
 
         socket.on('join', (data) => {
-            if(sockets[socket.id].indexOf(data.room) === -1) {
+            if(sockets[socket.id] === undefined) {
+                socket.join(data.room);
+                sockets[socket.id] = [data.room];
+            } else if(sockets[socket.id].indexOf(data.room) === -1) {
                 socket.join(data.room);
                 sockets[socket.id] = [...sockets[socket.id], data.room];
             }
