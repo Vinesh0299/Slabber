@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-//var port = Process.env.PORT;
 
 module.exports = {
     sendMail: async function(token){
@@ -12,7 +11,7 @@ module.exports = {
                 pass: 'hmdhmd23', // generated ethereal password
             }
         });
-        var verifyUrl = "http://localhost:3000/confirmation?token="+token.token+"&email="+token.email+"\n." ;
+        var verifyUrl = "http://slabber.herokuapp.com/confirmation?token="+token.token+"&email="+token.email+"\n." ;
         let info = await transporter.sendMail({
             from: '"Slabber Services" <handmedownapp1@gmail.com>', // sender address
             to: token.email, // list of receivers

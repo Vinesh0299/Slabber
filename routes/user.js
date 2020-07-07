@@ -33,9 +33,8 @@ app.post('/login', (req, res, next) => {
                         res.status(401).json({message: "Email not verified"});
                     } else {
                         res.status(200).json({message: "User authenticated", token: jwt.sign({
-                            email: data.email,
-                            username: item[0].username
-                        }, privatekey), "username": item[0].username});
+                            email: data.email
+                        }, privatekey), name: item[0].fullname, email: item[0].email});
                     }
                 }
             }).catch((err) => {
@@ -50,6 +49,9 @@ app.post('/login', (req, res, next) => {
                 res.status(401).json({message: "Token is invalid"});
             }
         }
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
@@ -58,40 +60,38 @@ app.post('/signup', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        // Connecting to database to check if someone else has the same email or username
-        Users.find({username: data.username}).toArray((err, items) => {
-            if(items.length > 0) res.send({"error": 1, "message": "Username is already taken"});
+        // Connecting to database to check if someone else has the same email
+        Users.find({email: data.email}).toArray().then((item) => {
+            if(item.length > 0) res.status(409).json({message: "An account is already registered with this email"});
             else {
-                Users.find({email: data.email}).toArray((err, items) => {
-                    if(items.length > 0) res.send({"error": 2, "message": "An account is already registered with this email"});
-                    else {
-                        newUser = new user({
-                            username: data.username,
-                            fullname: data.fullname,
-                            gender: data.gender,
-                            country: data.country,
-                            email: data.email
-                        });
-                        // Hashing the user password
-                        newUser.password = newUser.encryptPassword(data.password);
-                        Users.insertOne(newUser, (err, result) => {
-                            const jwtToken = jwt.sign({
-                                email: data.email,
-                                username: data.username
-                            }, privatekey);
-                            const newToken = new token({
-                                username: data.username,
-                                email: data.email,
-                                token: jwtToken
-                            });
-                            mailer.sendMail(newToken).then((items) => {
-                                res.send({"error": 0, "message": "User added successfully to the database"});
-                            });
-                        });
-                    }
+                newUser = new user({
+                    fullname: data.fullname,
+                    gender: data.gender,
+                    country: data.country,
+                    email: data.email
+                });
+                // Hashing the user password
+                newUser.password = newUser.encryptPassword(data.password);
+                Users.insertOne(newUser).then((result) => {
+                    const jwtToken = jwt.sign({
+                        email: data.email
+                    }, privatekey);
+                    const newToken = new token({
+                        email: data.email,
+                        token: jwtToken
+                    });
+                    mailer.sendMail(newToken).then((items) => {
+                        res.status(200).json({message: "User added successfully to the database"});
+                    });
                 });
             }
+        }).catch((err) => {
+            console.log(err);
+            res.status(500).json({message: 'An error occured while storing information to database'});
         });
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
@@ -103,28 +103,31 @@ app.get('/confirmation', (req,res,next)=>{
     const token = parsedQs.token;
 
     if(!token || !user_email) {
-        res.send({"error": 1, "message": "User email or token not present"});
+        res.status(404).json({message: "User email or token not present"});
     } else {
         // Checking if token is valid
         try {
             const decoded = jwt.verify(token, privatekey);
-            if(decoded.email !== user_email) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
+            if(decoded.email !== user_email) res.status(406).json({message: "Token and email ids are different. Cannot process your request"});
             dbIns.then((db) => {
                 const Users = db.collection('Users');
-                Users.find({email: user_email}).toArray((err, items) => {
-                    if(items.length === 0) res.send({"error": 4, "message": "No such user exists in database"});
+                Users.find({email: user_email}).toArray().then((items) => {
+                    if(items.length === 0) res.status(404).json({message: "No such user exists in database"});
                     else {
-                        if(decoded.username !== items[0].username) res.send({"error": 3, "message": "Token and email ids are different. Cannot process your request"});
-                        else {
-                            Users.updateOne({username: decoded.username}, { $set: { isVerified: true } }).then((items) => {
-                                res.send({"error": 0, "message": "User was successfully Verified"});
-                            });
-                        }
+                        Users.updateOne({email: decoded.email}, { $set: { isVerified: true } }).then((items) => {
+                            res.status(200).json({message: "User was successfully Verified"});
+                        });
                     }
+                }).catch((err) => {
+                    console.log(err);
+                    res.status(500).json({message: 'There was an error while verifying'});
                 });
+            }).catch((err) => {
+                console.log(err);
+                res.status(500).json({message: 'Error occured while connecting to the database'});
             });
         } catch(err) {
-            res.send({"error": 2, "message": "Token is invalid"});
+            res.status(422).json({message: "Token is invalid"});
         }
     }
 });
@@ -137,22 +140,24 @@ app.post('/resend', (req, res, next)=>{
         const decoded = jwt.verify(data.token, privatekey);
         dbIns.then((db) => {
             const Users = db.collection('Users');
-            Users.find({username: decoded.username}).toArray((err, items) => {
-                if(items.length === 0) res.send({"error": 1, "message": "User not found in database"});
+            Users.find({email: decoded.email}).toArray().then((items) => {
+                if(items.length === 0) res.status(404).json({message: "User not found in database"});
                 else {
                     const newToken = new token({
-                        username: decoded.username,
                         email: decoded.email,
                         token: data.token
                     });
                     mailer.sendMail(newToken).then((items) => {
-                        res.send({"error": 0, "message": "Verification email sent"});
+                        res.status(200).json({message: "Verification email sent"});
                     });
                 }
+            }).catch((err) => {
+                console.log(err);
+                res.status(500).json({message: 'There was an error while resending the verification link'});
             });
         });
     } catch(err) {
-        res.send({"error": 2, "message": "Token is invalid"});
+        res.status(422).json({message: "Token is invalid"});
     }
         
 });
@@ -163,16 +168,19 @@ app.post('/sendrequest', (req, res, next) => {
     dbIns.then((db) => {
         const Users = db.collection('Users');
         // Checking if user exists
-        Users.find({username: data.findFriend}).toArray((err, items) => {
-            if(items.length === 0) res.send({"error": 1, "message": "Your requested user does not exists, please try again"});
+        Users.find({email: data.findFriend}).toArray().then((items) => {
+            if(items.length === 0) res.status(404).json({message: "Your requested user does not exists, please try again"});
             else {
-                Users.updateOne({username: data.username}, { $push: { sentRequest: data.findFriend }}, (err, result) => {
-                    Users.updateOne({username: data.findFriend}, { $push: {receivedRequest: data.username }}, (err, result) => {
-                        res.send({"error": 0, "message": "Friend Request Sent Successfully"});
+                Users.updateOne({email: data.email}, { $push: { sentRequest: data.findFriend }}).then((result) => {
+                    Users.updateOne({email: data.findFriend}, { $push: {receivedRequest: data.email }}).then((result) => {
+                        res.status(200).json({message: "Friend Request Sent Successfully"});
                     });
                 });
             }
         });
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
@@ -182,25 +190,26 @@ app.post('/acceptrequest', (req, res, next) => {
     dbIns.then((db) => {
         const Users = db.collection('Users');
         // Checking if user exists
-        Users.find({username: data.requestUsername}).toArray((err, items) => {
-            if(items.length === 0) res.send({"error": 1, "message": "User does not exists"});
+        Users.find({email: data.requestemail}).toArray().then((items) => {
+            if(items.length === 0) res.status(404).json({message: "User does not exists"});
             else {
                 const reqUserId = items[0]._id;
                 const friendsList = items[0].friendsList;
+                const friendName = items[0].fullname;
                 var alreadyFriend = false;
-                Users.find({username: data.username}).toArray()
-                .then((items) => {
-                    console.log(err);
+                Users.find({email: data.email}).toArray().then((items) => {
                     const userId = items[0]._id;
                     // Checking if uers are already friends and if not then adding them as friends
                     friendsList.forEach((friend) => {
                         if(JSON.stringify(friend.oid) === JSON.stringify(userId)) alreadyFriend = true;
                     });
                     if(!alreadyFriend) {
-                        Users.updateOne({username: data.requestUsername}, { $push: { friendsList: {
-                            "$ref": 'User',
-                            "$id": new ObjectId(userId),
-                            "$db": "Slabber"
+                        Users.updateOne({email: data.requestemail}, { $push: { friendsList: {
+                            friendId: {
+                                "$ref": 'User',
+                                "$id": new ObjectId(userId),
+                                "$db": "Slabber"
+                            }, friendName: items[0].fullname
                         } } });
                     }
                     alreadyFriend = false;
@@ -208,46 +217,54 @@ app.post('/acceptrequest', (req, res, next) => {
                         if(JSON.stringify(friend.oid) === JSON.stringify(reqUserId)) alreadyFriend = true;
                     });
                     if(!alreadyFriend) {
-                        Users.updateOne({username: data.username}, { $push: { friendsList: {
-                            "$ref": 'User',
-                            "$id": new ObjectId(reqUserId),
-                            "$db": "Slabber"
+                        Users.updateOne({email: data.email}, { $push: { friendsList: {
+                            friendId: {
+                                "$ref": 'User',
+                                "$id": new ObjectId(reqUserId),
+                                "$db": "Slabber"
+                            }, friendName: friendName
                         } } });
                     }
                 }).then((items) => {
                     // Removing requests from both users after successfully adding them as friends
-                    Users.updateOne({username: data.username}, { $pull: { receivedRequest: data.requestUsername } })
+                    Users.updateOne({email: data.email}, { $pull: { receivedRequest: data.requestemail } })
                     .then((items) => {
-                        Users.updateOne({username: data.requestUsername}, { $pull: { sentRequest: data.username } })
+                        Users.updateOne({email: data.requestemail}, { $pull: { sentRequest: data.email } })
                     });
                 }).then((items) => {
                     // Sending response to the user
-                    if(alreadyFriend) res.send({"error": 0, "message": "Friend Request already Accepted"});
-                    else res.send({"error": 0, "message": "Friend Request already Accepted"});
+                    if(alreadyFriend) res.status(200).json({message: "Friend Request already Accepted"});
+                    else res.status(200).json({message: "Friend Request already Accepted"});
                 });
             }
         });
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
-// Api will send the username and fullname of all the friends of the user
+// Api will send the email and fullname of all the friends of the user
 app.get('/getfriendlist', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        Users.find({username: data.username}).toArray().then(async (items) => {
-            if(items[0].friendsList.length === 0) res.send({"error": 0, "message": "You don't have any friends"});
+        Users.find({email: data.email}).toArray().then(async (items) => {
+            if(items[0].friendsList.length === 0) res.status(200).json({message: "You don't have any friends", friends: []});
             else {
                 var friends = [];
                 for(var i = 0; i < items[0].friendsList.length; i++) {
                     const friend = await Users.find({_id: items[0].friendsList[i].oid}).toArray();
                     friends[i] = {};
-                    friends[i].username = friend[0].username;
+                    friends[i].email = friend[0].email;
                     friends[i].fullname = friend[0].fullname;
                 }
-                res.send({"error": 0, "message": "Here is a list of your friends", "friends": friends});
+                res.status(200).json({message: "Here is a list of your friends", friends: friends});
             }
         });
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
@@ -256,9 +273,12 @@ app.get('/getsentrequests', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        return Users.find({username: data.username}).toArray()
+        return Users.find({email: data.email}).toArray()
     }).then((item) => {
-        res.send({"error": 0, "message": "Here are your sent requests", "sentRequests": item[0].sentRequest});
+        res.status(200).json({message: "Here are your sent requests", sentRequests: item[0].sentRequest});
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
@@ -267,9 +287,12 @@ app.get('/getreceivedrequests', (req, res, next) => {
     const data = req.body;
     dbIns.then((db) => {
         const Users = db.collection('Users');
-        return Users.find({username: data.username}).toArray()
+        return Users.find({email: data.email}).toArray()
     }).then((item) => {
-        res.send({"error": 0, "message": "These are friend requests sent to you", "receivedRequests": item[0].receivedRequest});
+        res.status(200).json({message: "These are friend requests sent to you", receivedRequests: item[0].receivedRequest});
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: 'Error occured while connecting to the database'});
     });
 });
 
