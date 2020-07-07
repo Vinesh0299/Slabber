@@ -24,7 +24,7 @@
         <script>
             const user = prompt("Enter your name");
             var roomid ="<%= room %>";
-            const socket = io();
+            const socket = io('https://slabber.herokuapp.com/');
             var msg = '';
 
             socket.emit('join', {room: roomid});
@@ -38,7 +38,7 @@
             }
             socket.on('newMessage', (data) => {
                 var node = document.createElement('div');
-                node.innerText = data.message;
+                node.innerText = data.message.message;
                 document.getElementById("chat-messages").appendChild(node);
             });
         </script>

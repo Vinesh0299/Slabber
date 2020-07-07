@@ -23,32 +23,31 @@ app.post('/login', (req, res, next) => {
         const Users = db.collection('Users');
         // Login Verification, if token exists then authentication is done instantaneously
         if(!data.token) {
-            Users.find({email: data.email}).toArray((err, item) => {
-                if(item.length === 0){
-                    res.send({"error": 3, "message":"User Email Not found"});
-                } else {
+            Users.find({email: data.email}).toArray().then((item) => {
+                if(item.length === 0) res.status(404).json({message: "User Email Not found"});
+                else {
                     const newUser = new user(item[0]);
                     if(!newUser.validUserPassword(data.password)){
-                        res.send({"error": 4, "message": "Incorrect Password"});
+                        res.status(406).json({message: "Incorrect Password"});
                     } else if(!newUser.isVerified){
-                        res.send({"error": 5, "message": "Email not verified", "token": jwt.sign({
-                            email: data.email,
-                            username: item[0].username
-                        }, privatekey)});
+                        res.status(401).json({message: "Email not verified"});
                     } else {
-                        res.send({"error": 0, "message": "User authenticated", "token": jwt.sign({
+                        res.status(200).json({message: "User authenticated", token: jwt.sign({
                             email: data.email,
                             username: item[0].username
                         }, privatekey), "username": item[0].username});
                     }
                 }
-            });
+            }).catch((err) => {
+                console.log(err);
+                res.status(500).json({message: 'There was an error while authenticating the user'});
+            })
         } else {
             try {
                 const decoded = jwt.verify(data.token, privatekey);
-                res.send({"error": 0, "message": "User authenticated"});
+                res.status(200).json({message: "User authenticated"});
             } catch(err) {
-                res.send({"error": 1, "message": "Token is invalid"});
+                res.status(401).json({message: "Token is invalid"});
             }
         }
     });
