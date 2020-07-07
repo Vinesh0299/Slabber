@@ -7,13 +7,13 @@ module.exports = {
             port: 587,
             secure: false, // true for 465, false for other ports
             auth: {
-                user: "handmedownapp1@gmail.com", // generated ethereal user
-                pass: 'hmdhmd23', // generated ethereal password
+                user: "Madarauchiha3524@gmail.com", // generated ethereal user
+                pass: 'tyiwcqabfhorbdgw', // generated ethereal password
             }
         });
         var verifyUrl = "http://slabber.herokuapp.com/confirmation?token="+token.token+"&email="+token.email+"\n." ;
         let info = await transporter.sendMail({
-            from: '"Slabber Services" <handmedownapp1@gmail.com>', // sender address
+            from: '"Slabber Services" <Madarauchiha3524@gmail.com>', // sender address
             to: token.email, // list of receivers
             subject: "Email Verification at Slabber", // Subject line
             text: "", // plain text body
