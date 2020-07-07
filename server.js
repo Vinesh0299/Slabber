@@ -12,7 +12,7 @@ const userRoutes = require('./routes/user.js');
 
 const dbIns = require('./models/dbconnection.js');
 
-/*dbIns.then((db) => {
+dbIns.then((db) => {
     console.log('Database connected');
     // Checks if all the necessary collections are present in the mongodb database
     collections.forEach((collection) => {
@@ -26,7 +26,7 @@ const dbIns = require('./models/dbconnection.js');
             }
         });
     });
-});*/
+});
 
 // Importing created socket events
 require('./socket/groupchat.js')(io);
@@ -35,6 +35,6 @@ require('./socket/groupchat.js')(io);
 app.use('/', chatRoutes);
 app.use('/', userRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

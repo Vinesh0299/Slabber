@@ -3,7 +3,7 @@
 const MongoClient = require('mongodb').MongoClient;
 
 // Url defined for connecting to the remote database.
-const url = 'mongodb+srv://' + (process.env.MongoUser || 'cse180001061') + ':' + (process.env.MongoPass || 'katewa110023') + '@test-cluster-t8qxz.mongodb.net/Slabber?retryWrites=true&w=majority';
+const url = 'mongodb+srv://' + process.env.MongoUser + ':' + process.env.MongoPass + '@test-cluster-t8qxz.mongodb.net/Slabber?retryWrites=true&w=majority';
 
 // Function that will return an instance to the 'test' database on the remote mongodb database
 function getDb() {
