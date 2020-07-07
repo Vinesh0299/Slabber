@@ -34,7 +34,7 @@ app.post('/login', (req, res, next) => {
                     } else {
                         res.status(200).json({message: "User authenticated", token: jwt.sign({
                             email: data.email
-                        }, privatekey), name: item[0].fullname, email: item[0].email});
+                        }, privatekey), name: item[0].fullname, email: item[0].email, chatrooms: item[0].chatRoomList, friends: item[0].friendsList});
                     }
                 }
             }).catch((err) => {
@@ -44,7 +44,9 @@ app.post('/login', (req, res, next) => {
         } else {
             try {
                 const decoded = jwt.verify(data.token, privatekey);
-                res.status(200).json({message: "User authenticated"});
+                Users.find({email: decoded.email}).toArray().then((item) => {
+                    res.status(200).json({message: "User authenticated", name: item[0].fullname, email: item[0].email, chatrooms: item[0].chatRoomList, friends: item[0].friendsList});
+                })
             } catch(err) {
                 res.status(401).json({message: "Token is invalid"});
             }
