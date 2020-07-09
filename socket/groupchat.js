@@ -5,18 +5,20 @@ module.exports = function(io) {
     io.on('connection', (socket) => {
 
         socket.on('join', (data) => {
-            if(sockets[socket.id] === undefined) {
+            if(sockets[data.objectid] === undefined) {
                 socket.join(data.room);
-                sockets[socket.id] = [data.room];
-            } else if(sockets[socket.id].indexOf(data.room) === -1) {
+                sockets[data.objectid].rooms = [data.room];
+                sockets[data.objectid].socket = socket.id;
+            } else if(sockets[data.objectid].rooms.indexOf(data.room) === -1) {
                 socket.join(data.room);
-                sockets[socket.id] = [...sockets[socket.id], data.room];
+                sockets[data.objectid].socket = socket.id;
+                sockets[data.objectid].rooms = [...sockets[data.objectid].rooms, data.room];
             }
         });
 
         socket.on('newChatroom', (message) => {
             message.members.forEach((member) => {
-                io.to(member).emit('newChatroom', {
+                io.to(sockets[member].socket).emit('newChatroom', {
                     name: message.name,
                     id: message.id
                 });
