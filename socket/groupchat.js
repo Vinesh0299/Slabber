@@ -14,6 +14,15 @@ module.exports = function(io) {
             }
         });
 
+        socket.on('newChatroom', (message) => {
+            message.members.forEach((member) => {
+                io.to(member).emit('newChatroom', {
+                    name: message.name,
+                    id: message.id
+                });
+            });
+        });
+
         socket.on('createMessage', (message) => {
             io.to(message.room).emit('newMessage', {
                 message: message.content,

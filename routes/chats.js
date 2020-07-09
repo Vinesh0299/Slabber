@@ -27,7 +27,7 @@ app.post('/createroom', (req, res, next) => {
         const Chatrooms = db.collection('Chatrooms');
         const Users = db.collection('Users');
         // Check if email actually exists
-        Users.find({email: data.email}).toArray().then((items) => {
+        Users.find({_id: data._id}).toArray().then((items) => {
             const chatroom = new groups({
                 name: data.name
             });
@@ -41,7 +41,7 @@ app.post('/createroom', (req, res, next) => {
                     "$db": 'Slabber'
                 } } });
                 data.members.map((member) => {
-                    Users.find({email: member}).toArray().then((items) => {
+                    Users.find({_id: member}).toArray().then((items) => {
                         if(items.length > 0) {
                             // Update the memberList array for the chatroom
                             Chatrooms.updateOne({_id: chatroom._id}, { $push: { memberList: {
@@ -53,7 +53,7 @@ app.post('/createroom', (req, res, next) => {
                                 memberName: items[0].fullname
                             } } });
                             // Add this chatroom to each member's chatroom list
-                            Users.updateOne({email: items[0].email}, { $push: { chatRoomList: {
+                            Users.updateOne({_id: items[0]._id}, { $push: { chatRoomList: {
                                 roomId: {
                                     "$ref": 'Chatroom',
                                     "$id": new ObjectId(chatroom._id),
@@ -84,7 +84,7 @@ app.post('/createPrivateChat', (req, res, next) => {
         const privateChats = db.collection('PrivateChats');
         const Users = db.collection('Users');
         // Getting ids of both users and checking if both of them exists
-        Users.find({ $or: [ {email: data.email}, {email: data.friendemail} ] }).toArray().then((items) => {
+        Users.find({ $or: [ {_id: data._id}, {_id: data.friend_id} ] }).toArray().then((items) => {
             if(items.length > 1) {
                 const user = items[0].fullname;
                 const friend = items[1].fullname;
@@ -103,7 +103,7 @@ app.post('/createPrivateChat', (req, res, next) => {
                     }
                 } }).then((items) => {
                     // Updating User information by adding the private chat data to their database information
-                    Users.update({email: data.email}, { $push: { privateChats: {
+                    Users.update({_id: data._id}, { $push: { privateChats: {
                         chatId: {
                             "$ref": 'PrivateChat',
                             "$id": privatechat._id,
@@ -111,7 +111,7 @@ app.post('/createPrivateChat', (req, res, next) => {
                         },
                         friendName: friend
                     } } });
-                    Users.update({email: data.friendemail}, { $push: { privateChats: {
+                    Users.update({_id: data.friend_id}, { $push: { privateChats: {
                         chatId: {
                             "$ref": 'PrivateChat',
                             "$id": privatechat._id,
