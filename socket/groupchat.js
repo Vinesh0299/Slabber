@@ -5,10 +5,8 @@ module.exports = function(io) {
     io.on('connection', (socket) => {
 
         socket.on('join', (data) => {
-            if(sockets[data.objectid] === undefined) {
-                socket.join(data.room);
-                sockets[data.objectid] = socket.id;
-            }
+            socket.join(data.room);
+            sockets[data.objectid] = socket.id;
         });
 
         socket.on('newChatroom', (message) => {
