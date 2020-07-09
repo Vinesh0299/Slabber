@@ -7,12 +7,7 @@ module.exports = function(io) {
         socket.on('join', (data) => {
             if(sockets[data.objectid] === undefined) {
                 socket.join(data.room);
-                sockets[data.objectid].rooms = [data.room];
                 sockets[data.objectid].socket = socket.id;
-            } else if(sockets[data.objectid].rooms.indexOf(data.room) === -1) {
-                socket.join(data.room);
-                sockets[data.objectid].socket = socket.id;
-                sockets[data.objectid].rooms = [...sockets[data.objectid].rooms, data.room];
             }
         });
 
@@ -31,11 +26,6 @@ module.exports = function(io) {
                 room: message.room,
                 socket: socket.id
             });
-        });
-
-        socket.on('disconnect', () => {
-            delete sockets[socket.id];
-            console.log(sockets);
         });
     });
 }

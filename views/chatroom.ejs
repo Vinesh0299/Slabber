@@ -28,6 +28,8 @@
             var msg = '';
 
             socket.emit('join', {room: roomid});
+            socket.emit('join', {room: roomid});
+            socket.emit('join', {room: roomid});
 
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
