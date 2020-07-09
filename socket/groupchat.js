@@ -7,13 +7,13 @@ module.exports = function(io) {
         socket.on('join', (data) => {
             if(sockets[data.objectid] === undefined) {
                 socket.join(data.room);
-                sockets[data.objectid].socket = socket.id;
+                sockets[data.objectid] = socket.id;
             }
         });
 
         socket.on('newChatroom', (message) => {
             message.members.forEach((member) => {
-                io.to(sockets[member].socket).emit('newChatroom', {
+                io.to(sockets[member]).emit('newChatroom', {
                     name: message.name,
                     id: message.id
                 });
