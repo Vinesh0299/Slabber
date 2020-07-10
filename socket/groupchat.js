@@ -47,16 +47,20 @@ module.exports = function(io) {
                         "$ref": 'Messages',
                         "$id": new ObjectId(Message._id),
                         "$db": 'Slabber'
-                    } } }).then((result) => {
-                        io.to(message.room).emit('newMessage', {
-                            message: message.content,
-                            room: message.room,
-                            socket: socket.id
-                        });
+                    } } });
+                }).then((result) => {
+                    io.to(message.room).emit('newMessage', {
+                        message: message.content,
+                        room: message.room,
+                        socket: socket.id
                     });
+                }).catch((err) => {
+                    console.log(err);
+                    console.log("Error occured while inserting message to database");
                 });
             }).catch((err) => {
                 console.log(err);
+                console.log("Error occured while connecting to database");
             });
         });
 
