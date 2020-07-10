@@ -3,14 +3,27 @@ const chatMessage = require('../models/message.js');
 const ObjectId = require('mongodb');
 
 var sockets = {};
+var objectids = {};
 
 module.exports = function(io) {
 
     io.on('connection', (socket) => {
 
         socket.on('join', (data) => {
-            socket.join(data.room);
-            sockets[data.objectid] = socket.id;
+            data.room.forEach((room) => {
+                socket.join(room);
+            });
+            if(sockets[data.id] === undefined) {
+                sockets[data.id] = {
+                    online: true,
+                    socet: socket.id
+                };
+                objectids[socket.id] = data.id;
+            } else {
+                sockets[data.id].online = true;
+                sockets[data.id].socket = socket.id;
+                objectids[socket.id] = data.id;
+            }
         });
 
         socket.on('newChatroom', (message) => {
@@ -46,5 +59,10 @@ module.exports = function(io) {
                 console.log(err);
             });
         });
+
+        socket.on('disconnect', () => {
+            delete sockets[objectids[socket.id]];
+            delete objectids[socket.id];
+        })
     });
 }
