@@ -41,7 +41,7 @@ module.exports = function(io) {
                 message: message.content.message,
                 name: message.content.name
             });
-            dbIns((db) => {
+            dbIns.then((db) => {
                 db.collection('Messages').insertOne(Message).then((result) => {
                     db.collection('Chatrooms').updateOne({_id: message.room}, { $push: { message: {
                         "$ref": 'Messages',
