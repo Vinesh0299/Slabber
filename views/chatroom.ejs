@@ -27,9 +27,7 @@
             const socket = io('https://slabber.herokuapp.com/');
             var msg = '';
 
-            socket.emit('join', {room: roomid});
-            socket.emit('join', {room: roomid});
-            socket.emit('join', {room: roomid});
+            socket.emit('join', {id: '123', room: [roomid]});
 
             function sendMessage() {
                 msg = document.getElementById('write-message').value;
