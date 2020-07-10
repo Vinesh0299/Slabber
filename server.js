@@ -4,7 +4,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 // Required collections must have in database
-const collections = ['Users', 'Chatrooms', 'PrivateChats'];
+const collections = ['Users', 'Chatrooms', 'Messages'];
 
 // Importing created routes
 const chatRoutes = require('./routes/chats.js');
